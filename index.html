@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Graph Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .fb-card { background: #fff; border: 1px solid #dddfe2; font-family: Helvetica, Arial, sans-serif; }
+        .x-card { background: #000; color: #fff; border: 1px solid #333; }
+        .discord-card { background: #2f3136; color: #dcddde; border-radius: 4px; border-left: 4px solid #202225; }
+        
+        .truncate-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .img-preview {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #e5e7eb;
+            transition: background-image 0.3s ease;
+        }
+
+        /* Tooltip style for character counters */
+        .char-counter {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .count-good { background: #dcfce7; color: #166534; }
+        .count-warn { background: #fef9c3; color: #854d0e; }
+        .count-bad { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Open Graph Previewer</h1>
+            <p class="text-gray-600 mt-2">Design and visualize how your website looks when shared on social media.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Editor Sidebar -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800">Metadata Editor</h2>
+                        <button onclick="loadRandomMock()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                            Random Example
+                        </button>
+                    </div>
+
+                    <div class="space-y-5">
+                        <!-- Title Input -->
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium text-gray-700">Page Title</label>
+                                <span id="title-count" class="char-counter">0/60</span>
+                            </div>
+                            <input type="text" id="in-title" oninput="sync()" placeholder="Catchy title for your page"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+
+                        <!-- Description Input -->
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium text-gray-700">Description</label>
+                                <span id="desc-count" class="char-counter">0/155</span>
+                            </div>
+                            <textarea id="in-desc" oninput="sync()" rows="3" placeholder="A brief summary of your content..."
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+                        </div>
+
+                        <!-- Image URL -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                            <input type="text" id="in-img" oninput="sync()" placeholder="https://example.com/image.jpg"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+
+                        <!-- Site Name -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Site Name</label>
+                            <input type="text" id="in-site" oninput="sync()" placeholder="My Awesome Website"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-gray-100">
+                        <button onclick="copyMetaTags()" class="w-full bg-gray-900 text-white py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Copy HTML Meta Tags
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Previews -->
+            <div class="lg:col-span-7 space-y-10">
+                
+                <!-- Facebook Preview -->
+                <section>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Facebook</h3>
+                    <div class="fb-card shadow-sm overflow-hidden max-w-[500px]">
+                        <div id="fb-img" class="img-preview aspect-[1.91/1]"></div>
+                        <div class="p-3 border-t bg-[#f2f3f5]">
+                            <div id="fb-site" class="text-[12px] text-[#606770] uppercase truncate">SITENAME.COM</div>
+                            <div id="fb-title" class="text-[16px] font-bold text-[#1d2129] leading-tight mt-1 truncate-2">Title</div>
+                            <div id="fb-desc" class="text-[14px] text-[#606770] leading-snug mt-1 truncate-2">Description goes here...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- X / Twitter Preview -->
+                <section>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">X (Twitter)</h3>
+                    <div class="x-card rounded-2xl overflow-hidden max-w-[504px]">
+                        <div id="x-img" class="img-preview aspect-[1.91/1]"></div>
+                        <div class="p-3">
+                            <div id="x-site" class="text-[14px] text-[#71767b]">site.com</div>
+                            <div id="x-title" class="text-[15px] font-normal text-white mt-0.5 truncate">Title</div>
+                            <div id="x-desc" class="text-[15px] text-[#71767b] leading-tight mt-0.5 truncate-2">Description here...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Discord Preview -->
+                <section>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Discord</h3>
+                    <div class="discord-card p-4 max-w-[432px]">
+                        <div id="ds-site" class="text-[12px] mb-1">Site Name</div>
+                        <div id="ds-title" class="text-[16px] font-semibold text-[#00b0f4] hover:underline cursor-pointer mb-1">Title</div>
+                        <div id="ds-desc" class="text-[14px] leading-snug mb-2">Description...</div>
+                        <div class="rounded-lg overflow-hidden mt-2 bg-[#202225]">
+                            <img id="ds-img" src="" class="max-w-full h-auto block" onerror="this.style.opacity='0'">
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="modal" class="fixed inset-0 bg-black/50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity z-[100]">
+        <div class="bg-white p-6 rounded-2xl max-w-lg w-full m-4">
+            <h3 class="text-xl font-bold mb-4">Meta Tags Copied!</h3>
+            <pre id="code-block" class="bg-gray-100 p-4 rounded-lg text-xs overflow-x-auto whitespace-pre-wrap font-mono text-gray-800 mb-4"></pre>
+            <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-medium">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const inputs = {
+            title: document.getElementById('in-title'),
+            desc: document.getElementById('in-desc'),
+            img: document.getElementById('in-img'),
+            site: document.getElementById('in-site')
+        };
+
+        const previews = {
+            fb: { title: document.getElementById('fb-title'), desc: document.getElementById('fb-desc'), img: document.getElementById('fb-img'), site: document.getElementById('fb-site') },
+            x: { title: document.getElementById('x-title'), desc: document.getElementById('x-desc'), img: document.getElementById('x-img'), site: document.getElementById('x-site') },
+            ds: { title: document.getElementById('ds-title'), desc: document.getElementById('ds-desc'), img: document.getElementById('ds-img'), site: document.getElementById('ds-site') }
+        };
+
+        const mocks = [
+            {
+                title: "Top 10 Productivity Apps for 2024",
+                desc: "Boost your workflow with these hand-picked applications designed to save you hours every single week. From task management to focus timers.",
+                img: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=1000",
+                site: "TechFlow"
+            },
+            {
+                title: "The Ultimate Guide to Homemade Pasta",
+                desc: "Nothing beats the taste of fresh, handmade pasta. Follow our step-by-step guide to mastering the dough and shapes at home.",
+                img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&q=80&w=1000",
+                site: "KitchenSecret"
+            },
+            {
+                title: "Exploring the Northern Lights: Best Spots",
+                desc: "Plan your trip to see the Aurora Borealis with our comprehensive travel guide covering Scandinavia, Iceland, and Canada.",
+                img: "https://images.unsplash.com/photo-1531366930477-4fbd40691380?auto=format&fit=crop&q=80&w=1000",
+                site: "Wanderlust"
+            }
+        ];
+
+        function sync() {
+            const val = {
+                title: inputs.title.value || "Your Page Title",
+                desc: inputs.desc.value || "This is a placeholder for your page's description. Keep it between 50-160 characters for best results across platforms.",
+                img: inputs.img.value || "",
+                site: inputs.site.value || "yoursite.com"
+            };
+
+            // Counters
+            updateCounter('title-count', val.title.length, 60);
+            updateCounter('desc-count', val.desc.length, 155);
+
+            // FB
+            previews.fb.title.innerText = val.title;
+            previews.fb.desc.innerText = val.desc;
+            previews.fb.site.innerText = val.site.toUpperCase();
+            previews.fb.img.style.backgroundImage = val.img ? `url('${val.img}')` : '';
+
+            // X
+            previews.x.title.innerText = val.title;
+            previews.x.desc.innerText = val.desc;
+            previews.x.site.innerText = val.site.toLowerCase().replace(/\s+/g, '');
+            previews.x.img.style.backgroundImage = val.img ? `url('${val.img}')` : '';
+
+            // Discord
+            previews.ds.title.innerText = val.title;
+            previews.ds.desc.innerText = val.desc;
+            previews.ds.site.innerText = val.site;
+            const dsImg = document.getElementById('ds-img');
+            dsImg.src = val.img;
+            dsImg.style.opacity = val.img ? "1" : "0";
+        }
+
+        function updateCounter(id, length, max) {
+            const el = document.getElementById(id);
+            el.innerText = `${length}/${max}`;
+            el.className = 'char-counter';
+            if (length > max) el.classList.add('count-bad');
+            else if (length > max * 0.8) el.classList.add('count-warn');
+            else el.classList.add('count-good');
+        }
+
+        function loadRandomMock() {
+            const mock = mocks[Math.floor(Math.random() * mocks.length)];
+            inputs.title.value = mock.title;
+            inputs.desc.value = mock.desc;
+            inputs.img.value = mock.img;
+            inputs.site.value = mock.site;
+            sync();
+        }
+
+        function copyMetaTags() {
+            const code = `<!-- Primary Meta Tags -->
+<title>${inputs.title.value}</title>
+<meta name="title" content="${inputs.title.value}">
+<meta name="description" content="${inputs.desc.value}">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yoursite.com/">
+<meta property="og:title" content="${inputs.title.value}">
+<meta property="og:description" content="${inputs.desc.value}">
+<meta property="og:image" content="${inputs.img.value}">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://yoursite.com/">
+<meta property="twitter:title" content="${inputs.title.value}">
+<meta property="twitter:description" content="${inputs.desc.value}">
+<meta property="twitter:image" content="${inputs.img.value}">`;
+
+            document.getElementById('code-block').innerText = code;
+            
+            // Fallback copy for environments without modern clipboard API
+            const textArea = document.createElement("textarea");
+            textArea.value = code;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+
+            const modal = document.getElementById('modal');
+            modal.style.opacity = "1";
+            modal.style.pointerEvents = "auto";
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.style.opacity = "0";
+            modal.style.pointerEvents = "none";
+        }
+
+        // Init
+        window.onload = loadRandomMock;
+    </script>
+</body>
+</html>
+
+                          
